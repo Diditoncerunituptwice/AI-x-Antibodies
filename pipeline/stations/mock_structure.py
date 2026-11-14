@@ -36,10 +36,14 @@ def run(conn=None, verbose=False):
     for name, family in MOCKS:
         model_id = get_or_create_model(conn, name=name, family=family,
                                        role="evaluator", version=VERSION)
-        rows = conn.execute(
-            "SELECT c.candidate_id, c.sequence FROM candidate c"
-            " WHERE NOT EXISTS (SELECT 1 FROM evidence e WHERE e.candidate_id=c.candidate_id"
-            "                   AND e.model_id=?)", (model_id,)).fetchall()
+        rows = conn.execute("""
+            SELECT c.candidate_id,
+                   IFNULL(c.sequence_h,'') || IFNULL(c.sequence_l,'') AS sequence
+              FROM candidate c
+             WHERE NOT EXISTS (SELECT 1 FROM evidence e
+                                WHERE e.candidate_id = c.candidate_id
+                                  AND e.model_id = ?)
+        """, (model_id,)).fetchall()
         with conn:
             for r in rows:
                 for metric, lo, hi in (("iptm", 0.2, 0.95), ("ipsae", 0.15, 0.9),

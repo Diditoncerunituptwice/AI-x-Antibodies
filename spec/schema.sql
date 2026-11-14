@@ -25,7 +25,7 @@ CREATE TABLE spec_meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
-INSERT INTO spec_meta VALUES ('spec_version', '0.1.1'), ('mode', 'lite');
+INSERT INTO spec_meta VALUES ('spec_version', '0.1.2'), ('mode', 'lite');
 
 -- ───────────────────────── 1. TARGET ─────────────────────────
 CREATE TABLE target (
@@ -85,28 +85,43 @@ CREATE TABLE ingest_skip (
 -- CDR positions: 1-based, inclusive, indexes into THIS sequence (not IMGT/Kabat). Positional for now (D9).
 CREATE TABLE candidate (
   candidate_id       TEXT PRIMARY KEY CHECK (candidate_id NOT GLOB '*[^A-Za-z0-9_-]*' AND length(candidate_id) BETWEEN 3 AND 40),
-  sequence           TEXT NOT NULL UNIQUE
-                     CHECK (sequence NOT GLOB '*[^ACDEFGHIKLMNPQRSTVWY]*' AND length(sequence) BETWEEN 80 AND 160),
+  -- format: 'vhh' (single-domain, only sequence_h used) | 'scfv' or 'fab' (both chains)
+  format             TEXT NOT NULL DEFAULT 'vhh' CHECK (format IN ('vhh','scfv','fab')),
+  -- sequence_h: VHH domain OR the heavy chain. 80-160 aa. Alphabet-checked.
+  sequence_h         TEXT NOT NULL CHECK (sequence_h NOT GLOB '*[^ACDEFGHIKLMNPQRSTVWY]*' AND length(sequence_h) BETWEEN 80 AND 160),
+  -- sequence_l: light chain for scFv/fab, NULL for VHH. 90-120 aa typical VL.
+  sequence_l         TEXT CHECK (sequence_l IS NULL OR (sequence_l NOT GLOB '*[^ACDEFGHIKLMNPQRSTVWY]*' AND length(sequence_l) BETWEEN 80 AND 140)),
   target_id          TEXT NOT NULL REFERENCES target(target_id),
   generator_model_id INTEGER NOT NULL REFERENCES model(model_id),
-  seed               INTEGER,          -- LITE: optional (D4)
+  seed               INTEGER,
   parent_id          TEXT REFERENCES candidate(candidate_id),
   batch_id           TEXT NOT NULL REFERENCES ingest_batch(batch_id),
+  -- H-chain CDRs (or VHH CDRs)
   cdr1_start INTEGER, cdr1_end INTEGER,
   cdr2_start INTEGER, cdr2_end INTEGER,
   cdr3_start INTEGER, cdr3_end INTEGER,
+  -- L-chain CDRs (scfv/fab only)
+  cdr_l1_start INTEGER, cdr_l1_end INTEGER,
+  cdr_l2_start INTEGER, cdr_l2_end INTEGER,
+  cdr_l3_start INTEGER, cdr_l3_end INTEGER,
   cdr_source         TEXT,
   created_at         TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
   CHECK (parent_id IS NULL OR parent_id <> candidate_id),
-  -- CDR CHECKs kept; the pipeline inserts all-six-or-none and only when valid (else NULLs them),
-  -- so these never fire on the --force path. They are a backstop, not a gate.
+  -- format consistency: scfv/fab must have L chain; vhh must not
+  CHECK ((format = 'vhh' AND sequence_l IS NULL AND cdr_l1_start IS NULL)
+      OR (format IN ('scfv','fab') AND sequence_l IS NOT NULL)),
+  -- H-chain CDR structural checks (unchanged from v0.1.1)
   CHECK (cdr1_start IS NULL OR (cdr1_start >= 1 AND cdr1_end >= cdr1_start AND cdr1_end < cdr2_start)),
   CHECK (cdr2_start IS NULL OR (cdr2_end >= cdr2_start AND cdr2_end < cdr3_start)),
-  CHECK (cdr3_start IS NULL OR (cdr3_end >= cdr3_start AND cdr3_end <= length(sequence))),
-  CHECK ((cdr1_start IS NULL) = (cdr2_start IS NULL) AND (cdr2_start IS NULL) = (cdr3_start IS NULL)
-         AND (cdr1_start IS NULL) = (cdr1_end IS NULL) AND (cdr2_start IS NULL) = (cdr2_end IS NULL)
-         AND (cdr3_start IS NULL) = (cdr3_end IS NULL))
+  CHECK (cdr3_start IS NULL OR (cdr3_end >= cdr3_start AND cdr3_end <= length(sequence_h))),
+  CHECK ((cdr1_start IS NULL) = (cdr2_start IS NULL) AND (cdr2_start IS NULL) = (cdr3_start IS NULL)),
+  -- L-chain CDR structural checks (when present)
+  CHECK (cdr_l1_start IS NULL OR (cdr_l1_start >= 1 AND cdr_l1_end >= cdr_l1_start AND cdr_l1_end < cdr_l2_start)),
+  CHECK (cdr_l2_start IS NULL OR (cdr_l2_end >= cdr_l2_start AND cdr_l2_end < cdr_l3_start)),
+  CHECK (cdr_l3_start IS NULL OR (cdr_l3_end >= cdr_l3_start AND cdr_l3_end <= length(sequence_l))),
+  CHECK ((cdr_l1_start IS NULL) = (cdr_l2_start IS NULL) AND (cdr_l2_start IS NULL) = (cdr_l3_start IS NULL))
 );
+CREATE UNIQUE INDEX ix_candidate_pair ON candidate (sequence_h, COALESCE(sequence_l,''));
 
 -- role integrity of the generator link (kept: backbone of the generator/evaluator distinction)
 CREATE TRIGGER trg_candidate_checks BEFORE INSERT ON candidate
@@ -117,7 +132,7 @@ END;
 
 -- identity immutable (CDR columns may still be backfilled); candidates are never deleted (principle 0.7)
 CREATE TRIGGER trg_candidate_immutable BEFORE UPDATE OF
-  candidate_id, sequence, target_id, generator_model_id, seed, parent_id, batch_id ON candidate
+  candidate_id, format, sequence_h, sequence_l, target_id, generator_model_id, seed, parent_id, batch_id ON candidate
 BEGIN SELECT RAISE(ABORT, 'candidate identity fields are immutable'); END;
 CREATE TRIGGER trg_candidate_nodelete BEFORE DELETE ON candidate
 BEGIN SELECT RAISE(ABORT, 'candidates are never deleted; reject them with a reason'); END;
@@ -326,7 +341,7 @@ SELECT d.* FROM decision d
 -- The registry the judges see: one row per candidate (rejected included, with reason).
 -- Structural metrics are INDEPENDENT means/spread; n_independent_families is the uncertainty headline.
 CREATE VIEW v_registry AS
-SELECT c.candidate_id, c.sequence, c.parent_id,
+SELECT c.candidate_id, c.format, c.sequence_h, c.sequence_l, c.parent_id,
        g.name AS generator, g.version AS generator_version, c.seed AS generator_seed,
        s.current_state,
        cd.outcome AS decision, cd.authority AS decision_authority, cd.actor AS decided_by,

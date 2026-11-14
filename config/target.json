@@ -1,13 +1,12 @@
 {
-  "_comment": "Fill this in at the 09:30 brief, then run: python -m pipeline.seed_target",
-  "target_id": "T-TBD",
-  "name": "TO BE ANNOUNCED AT BRIEF",
-  "antigen_source": "",
+  "target_id": "T-HER2",
+  "name": "HER2 (ERBB2) — trastuzumab epitope",
+  "antigen_source": "human ERBB2 extracellular domain IV",
   "antigen_sequence": "",
-  "target_region": "",
-  "region_status": "assumption",
-  "epitope": "",
+  "target_region": "domain IV, trastuzumab epitope",
+  "region_status": "established",
+  "epitope": "overlapping trastuzumab contact residues on ERBB2 domain IV",
   "epitope_status": "assumption",
-  "desired_behavior": "Bind the target epitope with high specificity; block the functional surface.",
-  "behavior_status": "assumption"
+  "desired_behavior": "Bind HER2 domain IV at (or overlapping) the trastuzumab epitope; improve on trastuzumab baseline. Novelty: <70% identity to parent CDRs; preserve do-not-mutate list.",
+  "behavior_status": "established"
 }
