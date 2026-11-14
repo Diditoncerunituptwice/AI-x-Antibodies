@@ -7,3 +7,13 @@ __pycache__/
 .venv/
 reports/*.csv
 !reports/.gitkeep
+
+# nøkler og hemmeligheter — aldri i repoet
+*.pem
+*.key
+id_*
+team-*
+*_rsa
+*_ed25519
+.env
+.ssh/
