@@ -1,0 +1,12 @@
+{
+  "spec_version": "0.1.2",
+  "batch_id": "B-her2-json",
+  "target_id": "T-HER2",
+  "model": {
+    "name": "RFantibody",
+    "family": "rfantibody",
+    "version": "1.0"
+  },
+  "n_rows": 3,
+  "json_sha256": "efbb6466527af511e55e62182115b35a2166c0f4281f2bf4d52517ffc89d8482"
+}
