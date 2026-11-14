@@ -51,10 +51,12 @@ ai-antibodies/
 │   │   ├── paratope_identity.py  70% novelty rule vs reference library
 │   │   ├── nebius_submit.py      Fire async Nebius folding jobs
 │   │   ├── nebius_collect.py     Fetch results, parse into Evidence
+│   │   ├── apheris_openfold3_collect.py  Apheris OpenFold3 scores → Evidence (ipTM, pTM, pLDDT)
 │   │   └── mock_structure.py     FAKE (remove when real evaluators run)
 │   ├── filter.py                 Hard filters → Decision(recommended)
 │   ├── decide.py                 Human-in-the-loop CLI (select/reject)
 │   ├── export.py                 CSV reports → reports/
+│   ├── export_abguard.py         Submission CSV in the organisers' abguard format → reports/
 │   ├── evidence_cards.py         Markdown pitch doc → reports/
 │   └── run_all.py                Stations + filter + export in one command
 │
@@ -67,10 +69,16 @@ ai-antibodies/
 │       └── <your-batch>/         Drop new candidates.json here
 │
 ├── scripts/                      ──────── HELPERS ────────
+│   ├── apheris_to_candidates.py  RFD4-Proteina metrics → data/incoming/<batch>/candidates.json
 │   ├── fake_generator.py         Produce fake VHH sequences (dry run only)
 │   └── run_tests.py              Run all 35 tests without pytest
 │
+├── sequences/                    ──────── REFERENCE SEQUENCES ────────
+│   ├── trastuzumab_WT_reference.fasta  Wild-type heavy + light chain
+│   └── README.md                 The two tracks (de novo <70% / optimisation ≥70%)
+│
 ├── docs/                         ──────── REFERENCE MATERIAL ────────
+│   ├── OPTIMISATION-TRACK.md     Matteo's brief, mutants, 70% rule, open questions
 │   └── apheris/
 │       ├── openfold3-schema.json Apheris OpenFold3 input/output schema
 │       └── workflows.txt         (empty — no Nextflow workflows for us)
