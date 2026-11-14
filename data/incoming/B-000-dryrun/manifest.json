@@ -1,0 +1,18 @@
+{
+  "spec_version": "0.1.1",
+  "batch_id": "B-000-dryrun",
+  "target_id": "T-TBD",
+  "model": {
+    "name": "FAKE-Generator",
+    "family": "fake-generator",
+    "version": "0.0.0-dryrun",
+    "role": "generator",
+    "settings": {
+      "n": 25,
+      "seed": 20261114
+    }
+  },
+  "n_rows": 25,
+  "csv_sha256": "58da4de337ae113a4ad879936a21077df577cbabf2fd5624f2b309af4757b727",
+  "created_at": "2026-11-14T08:20:36Z"
+}

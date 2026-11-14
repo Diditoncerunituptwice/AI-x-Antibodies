@@ -1,0 +1,13 @@
+{
+  "_comment": "Fill this in at the 09:30 brief, then run: python -m pipeline.seed_target",
+  "target_id": "T-TBD",
+  "name": "TO BE ANNOUNCED AT BRIEF",
+  "antigen_source": "",
+  "antigen_sequence": "",
+  "target_region": "",
+  "region_status": "assumption",
+  "epitope": "",
+  "epitope_status": "assumption",
+  "desired_behavior": "Bind the target epitope with high specificity; block the functional surface.",
+  "behavior_status": "assumption"
+}

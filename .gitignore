@@ -1,0 +1,9 @@
+registry.db
+registry*.db
+*.db-journal
+*.db-wal
+__pycache__/
+*.pyc
+.venv/
+reports/*.csv
+!reports/.gitkeep

@@ -1,0 +1,5 @@
+# Stdlib only by design — nothing to install for the core pipeline.
+# Python 3.9+
+#
+# Add here ONLY if a real evaluator station needs a client library on the day,
+# and pin the version so the run stays reproducible (Execution is 20%).
