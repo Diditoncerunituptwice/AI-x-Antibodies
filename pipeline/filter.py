@@ -22,6 +22,9 @@ FILTERS = [
      "free cysteine beyond the canonical pair: aggregation / disulfide scrambling risk"),
     ("liability_motif_count", ">", 8.0, "developability",
      "liability motif load above the cut-off"),
+    # hackathon rule: a candidate must be <70% identical to every known anti-HER2 binder
+    ("paratope_identity_max", ">", 0.70, "duplicate",
+     "paratope > 70% identical to a known anti-HER2 binder (see source_ref)"),
     ("iptm", "<", 0.30, "low_confidence",
      "interface confidence below the cut-off across independent evaluators"),
 ]

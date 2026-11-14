@@ -30,6 +30,9 @@ def main(argv=None):
 
     print("\n-- stations --")
     developability.run(conn)
+    # paratope novelty only runs when the reference library has been imported
+    from pipeline.stations import paratope_identity
+    paratope_identity.run(conn)
     if args.mock:
         from pipeline.stations import mock_structure
         mock_structure.run(conn)

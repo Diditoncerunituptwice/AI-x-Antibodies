@@ -25,7 +25,7 @@ CREATE TABLE spec_meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
-INSERT INTO spec_meta VALUES ('spec_version', '0.1.2'), ('mode', 'lite');
+INSERT INTO spec_meta VALUES ('spec_version', '0.1.3'), ('mode', 'lite');
 
 -- ───────────────────────── 1. TARGET ─────────────────────────
 CREATE TABLE target (
@@ -54,6 +54,26 @@ CREATE TABLE model (
   settings_json TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(settings_json)),
   UNIQUE (name, version, role, settings_json)
 );
+
+-- ───────────────────────── reference_binder (anti-HER2 paratope library) ─────────────────────────
+-- Kuratert database over kjente anti-HER2 bindere, import fra bio-ekspertens bibliotek.
+-- Brukes av paratope_identity station for novelty-scoring og av filter.py for 70%-regel.
+-- Kandidater lagres i `candidate`; referanser her er SEPARATE — aldri blandet.
+CREATE TABLE reference_binder (
+  binder_id      TEXT PRIMARY KEY CHECK (binder_id NOT GLOB '*[^A-Za-z0-9_.-]*' AND length(binder_id) BETWEEN 2 AND 60),
+  name           TEXT NOT NULL,                    -- trastuzumab, pertuzumab, hu7C2, disitamab, ...
+  format         TEXT NOT NULL CHECK (format IN ('vhh','scfv','fab','igg','scaffold','other')),
+  subdomain      TEXT CHECK (subdomain IN ('I','II','III','IV','II-IV','unknown')),
+  source         TEXT NOT NULL,                    -- PDB id, patent id, paper citation
+  source_kind    TEXT NOT NULL CHECK (source_kind IN ('pdb','patent','paper','other')),
+  vh_sequence    TEXT CHECK (vh_sequence IS NULL OR vh_sequence NOT GLOB '*[^ACDEFGHIKLMNPQRSTVWY]*'),
+  vl_sequence    TEXT CHECK (vl_sequence IS NULL OR vl_sequence NOT GLOB '*[^ACDEFGHIKLMNPQRSTVWY]*'),
+  cdr_h1         TEXT, cdr_h2 TEXT, cdr_h3 TEXT,
+  cdr_l1         TEXT, cdr_l2 TEXT, cdr_l3 TEXT,
+  notes          TEXT,
+  added_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE INDEX ix_reference_subdomain ON reference_binder(subdomain);
 
 -- ───────────────────────── ingest batch (provenance of the handoff) ─────────────────────────
 -- LITE: manifest is optional (D4). If absent, the pipeline builds a batch row from CLI/defaults
@@ -145,7 +165,7 @@ BEGIN SELECT RAISE(ABORT, 'candidates are never deleted; reject them with a reas
 CREATE TABLE metric_definition (
   metric_name           TEXT PRIMARY KEY,
   metric_class          TEXT NOT NULL CHECK (metric_class IN
-                          ('confidence','geometry','developability','predicted_affinity_proxy',
+                          ('confidence','geometry','developability','novelty','predicted_affinity_proxy',
                            'experimental_binding','experimental_affinity','experimental_developability')),
   unit                  TEXT,
   allowed_evidence_type TEXT NOT NULL CHECK (allowed_evidence_type IN ('predicted','experimental')),
@@ -173,6 +193,8 @@ INSERT INTO metric_definition (metric_name,metric_class,unit,allowed_evidence_ty
  ('gravy',               'developability', NULL, 'predicted', 'Grand average of hydropathy.','spec-0.1.0'),
  ('liability_motif_count','developability','count','predicted','Count of sequence liabilities (N-glyc, deamidation, isomerization).','spec-0.1.0'),
  ('nativeness_score',    'developability', NULL, 'predicted', 'VHH nativeness/humanness-style score (tool defined by Model row).','spec-0.1.0'),
+ ('paratope_identity_max','novelty','0-1','predicted','Max sequence identity (concat CDRs) against the anti-HER2 reference library. 1.00 = same paratope as a known binder, < 0.70 = novel per hackathon rule. source_ref holds the closest reference binder name.','spec-0.1.3'),
+ ('paratope_subdomain_hits','novelty','count','predicted','Number of reference binders whose annotated subdomain the top match belongs to. Context for the novelty score.','spec-0.1.3'),
  -- PROVISIONAL (D10): confirm against the real Adaptyv result format; may change when announced.
  ('binding_detected',    'experimental_binding',  '0/1',  'experimental', 'Adaptyv: binding signal detected (1) or not (0). PROVISIONAL.','spec-0.1.0'),
  ('kd_nm',               'experimental_affinity', 'nM',   'experimental', 'Adaptyv: measured KD. PROVISIONAL.','spec-0.1.0'),
