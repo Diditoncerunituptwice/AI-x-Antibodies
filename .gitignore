@@ -17,3 +17,8 @@ team-*
 *_ed25519
 .env
 .ssh/
+
+# hackathon credentials — Nebius / JapanFold
+credentials.private.json
+*.private.json
+nebius-runs/
