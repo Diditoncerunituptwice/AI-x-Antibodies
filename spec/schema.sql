@@ -360,3 +360,25 @@ SELECT c.candidate_id, c.format, c.sequence_h, c.sequence_l, c.parent_id,
   JOIN model g ON g.model_id = c.generator_model_id
   JOIN v_candidate_state s ON s.candidate_id = c.candidate_id
   LEFT JOIN v_current_decision cd ON cd.candidate_id = c.candidate_id;
+
+
+-- ───────────────────────── Nebius submissions (pending ops) ─────────────────────────
+-- Tracks file-based batch jobs that are in flight. Written by nebius_submit,
+-- consumed by nebius_collect, which parses results into Evidence rows and flips
+-- `status` to 'fetched' or 'failed'. Append-only in spirit; status is the only
+-- mutable column (via INSERT-then-DELETE-latest would be cleaner, but this is
+-- pragmatic). No PII, no secrets.
+CREATE TABLE IF NOT EXISTS nebius_submission (
+  sub_id       INTEGER PRIMARY KEY,
+  candidate_id TEXT    NOT NULL REFERENCES candidate(candidate_id),
+  model_name   TEXT    NOT NULL,            -- 'nanobodybuilder2' etc, Nebius id
+  evaluator_model_id INTEGER NOT NULL REFERENCES model(model_id),
+  op_id        TEXT    NOT NULL UNIQUE,     -- Nebius operation id (op-xxxxxxxx)
+  label        TEXT    NOT NULL,
+  input_path   TEXT    NOT NULL,
+  status       TEXT    NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','fetched','failed')),
+  submitted_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  fetched_at   TEXT,
+  error        TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_nebius_pending ON nebius_submission(status);
