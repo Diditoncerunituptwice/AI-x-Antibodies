@@ -1,0 +1,2 @@
+notice: using registry "quay.io" from FOUNDRY_REGISTRY; this bypasses any stored login credential
+[]
