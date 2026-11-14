@@ -1,0 +1,33 @@
+[
+  {
+    "candidate_id": "C-EXAMPLE-scfv-001",
+    "format": "scfv",
+    "sequence_h": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGGDGFYAMDYWGQGTLVTVSS",
+    "sequence_l": "DIQMTQSPSSLSASVGDRVTITCRASQDVNTAVAWYQQKPGKAPKLLIYSASFLYSGVPSRFSGSRSGTDFTLTISSLQPEDFATYYCQQHYTTPPTFGQGTKVEIK",
+    "model_name": "REFERENCE",
+    "model_version": "trastuzumab-v1",
+    "seed": 0,
+    "parent_id": null
+  },
+  {
+    "_comment": "optimisation: trastuzumab with H3 edits, keep both chains",
+    "candidate_id": "C-EXAMPLE-scfv-002",
+    "format": "scfv",
+    "sequence_h": "EVQLVESGGGLVQPGGSLRLSCAASGFNIKDTYIHWVRQAPGKGLEWVARIYPTNGYTRYADSVKGRFTISADTSKNTAYLQMNSLRAEDTAVYYCSRWGSDGFHAMDYWGQGTLVTVSS",
+    "sequence_l": "DIQMTQSPSSLSASVGDRVTITCRASQDVNTAVAWYQQKPGKAPKLLIYSASFLYSGVPSRFSGSRSGTDFTLTISSLQPEDFATYYCQQHYTTPPTFGQGTKVEIK",
+    "model_name": "apheris-rfd4-proteina",
+    "model_version": "v0.3.0-antibody-2026-10-30",
+    "seed": 42,
+    "parent_id": "C-EXAMPLE-scfv-001"
+  },
+  {
+    "_comment": "de novo VHH: single chain, no sequence_l",
+    "candidate_id": "C-EXAMPLE-vhh-001",
+    "format": "vhh",
+    "sequence_h": "QVQLQESGGGLVQAGGSLRLSCAASGFNIKDTYIHMGWFRQAPGKEREFVAAIYPTNGYTRYYADSVKGRFTISRDNAKNTVYLQMNSLKPEDTAVYYCAAKWGDPYAMDYWGQGTQVTVSS",
+    "model_name": "apheris-rfd4-proteina",
+    "model_version": "v0.3.0-her2-novel-2026-11-09",
+    "seed": 7,
+    "parent_id": null
+  }
+]
